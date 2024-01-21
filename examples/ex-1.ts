@@ -1,9 +1,9 @@
-import { match } from 'ts-pattern'
+import { match } from 'ts-pattern';
 
 /**
  * example 1
  */
-type Weather = '맑음' | '구름' | '비' | '눈'
+type Weather = '맑음' | '구름' | '비' | '눈';
 
 const getWeatherDescription = (weather: Weather): string => {
   return (
@@ -14,9 +14,9 @@ const getWeatherDescription = (weather: Weather): string => {
       // .with('눈', () => '오늘은 눈이 오네요! 눈사람 만들 준비가 되셨나요?☃️')
       .with('눈', (selections, value) => `${selections}, ${value}`)
       .exhaustive()
-  )
-}
+  );
+};
 
-const currentWeather = '눈'
-const weatherDescription = getWeatherDescription(currentWeather)
-console.log(weatherDescription)
+const currentWeather = '눈';
+const weatherDescription = getWeatherDescription(currentWeather);
+console.log(weatherDescription);
