@@ -1,22 +1,53 @@
-import { match } from 'ts-pattern'
+import { match, P } from 'ts-pattern'
 
 /**
- * example 1
+ * example 2
  */
-type Weather = '맑음' | '구름' | '비' | '눈'
 
-const getWeatherDescription = (weather: Weather): string => {
-  return (
-    match<Weather, string>(weather)
-      .with('맑음', () => '오늘은 맑은 날이네요! 선크림을 꼭 챙기세요.🕶️')
-      .with('구름', () => '오늘은 구름이 낀 날이에요.🌥️')
-      .with('비', () => '오늘은 비가 오네요! 꼭 우산을 챙기세요.🌧️')
-      // .with('눈', () => '오늘은 눈이 오네요! 눈사람 만들 준비가 되셨나요?☃️')
-      .with('눈', (selections, value) => `${selections}, ${value}`)
-      .exhaustive()
-  )
-}
+type State =
+  | { status: 'idle' }
+  | { status: 'loading'; startTime: number }
+  | { status: 'success'; data: string }
+  | { status: 'error'; error: Error }
 
-const currentWeather = '눈'
-const weatherDescription = getWeatherDescription(currentWeather)
-console.log(weatherDescription)
+type Event =
+  | { type: 'fetch' }
+  | { type: 'success'; data: string }
+  | { type: 'error'; error: Error }
+  | { type: 'cancel' }
+
+const reducer = (state: State, event: Event) =>
+  match([state, event])
+    .returnType<State>()
+    .with([{ status: 'loading' }, { type: 'success' }], ([_, event]) => ({
+      status: 'success',
+      data: event.data,
+    }))
+    .with([{ status: 'loading' }, { type: 'error', error: P.select() }], (error) => ({
+      status: 'error',
+      error,
+    }))
+    .with([{ status: P.not('loading') }, { type: 'fetch' }], () => ({
+      status: 'loading',
+      startTime: Date.now(),
+    }))
+    .with(
+      [
+        {
+          status: 'loading',
+          startTime: P.when((t) => t + 2000 < Date.now()),
+        },
+        { type: 'cancel' },
+      ],
+      () => ({ status: 'idle' })
+    )
+    .with(P._, () => state)
+    .exhaustive()
+// .otherwise(() => console.error('ERROR'))
+
+const result = reducer(
+  { status: 'loading', startTime: 1 },
+  { type: 'success', data: 'event-success' }
+)
+
+console.log(result)
